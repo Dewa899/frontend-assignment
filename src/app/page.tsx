@@ -104,7 +104,7 @@ const CompanyTable = () => {
 	}
 
 	return (
-		<div className="w-full max-w-5xl mx-auto mt-8 bg-gray-900 rounded-lg shadow-lg p-8">
+		<div className="w-full max-w-5xl mx-auto mt-8 bg-gray-900/50 rounded-lg shadow-lg p-8 backdrop-blur-sm">
 			<h2 className="text-3xl font-bold mb-6 text-gray-200">Company List</h2>
 			<div className="overflow-x-auto">
 				<table className="w-full table-auto">
@@ -145,7 +145,7 @@ const CompanyTable = () => {
 
 const RegistrationForm = () => {
 	return (
-		<div className="w-full max-w-5xl mx-auto mt-8 bg-gray-900 rounded-lg shadow-lg p-8">
+		<div className="w-full max-w-5xl mx-auto mt-8 bg-gray-900/50 rounded-lg shadow-lg p-8 backdrop-blur-sm">
 			<h2 className="text-3xl font-bold mb-6 text-gray-200">
 				Company Registration
 			</h2>
@@ -261,7 +261,7 @@ const RegistrationForm = () => {
 					<label className="inline-flex items-center">
 						<input
 							type="checkbox"
-							className="form-checkbox h-5 w-5 text-[#00aca8]"
+							className="form-checkbox h-5 w-5 text-[#00aca8] rounded-full"
 						/>
 						<span className="ml-2 text-gray-400">
 							Agree to Terms and Conditions
@@ -290,7 +290,7 @@ export default function Home() {
 	}, []);
 
 	return (
-		<div className="flex flex-col md:flex-row min-h-screen bg-[#030712] font-sans">
+		<div className="flex flex-col md:flex-row min-h-screen font-sans">
 			{/* Carousel for Desktop */}
 			<div className="hidden md:block md:w-1/2 p-8">
 				{isClient && <Carousel />}
@@ -327,7 +327,9 @@ export default function Home() {
 						</button>
 					</div>
 					<div className="mt-8">
-						{view === "table" ? <CompanyTable /> : <RegistrationForm />}
+						<div key={view} className="animate-fade-in">
+							{view === "table" ? <CompanyTable /> : <RegistrationForm />}
+						</div>
 					</div>
 				</div>
 			</div>
