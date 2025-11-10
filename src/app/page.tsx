@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import ReactDOM from "react-dom";
 
 const Carousel = () => {
 	const carouselHtml = `
@@ -23,9 +24,9 @@ const Carousel = () => {
       class="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden"
     >
       <div class="overflow-hidden h-full">
-        <div class="flex transition-transform duration-500 ease-in-out h-full">
-          <template x-for="slide in slides" :key="slide.id">
-            <div x-show="activeSlide === slide.id" class="w-full h-full flex-shrink-0">
+        <div class="grid h-full">
+          <template x-for="(slide, index) in slides" :key="slide.id">
+            <div x-show="activeSlide === slide.id" x-transition.opacity.duration.1000ms class="col-start-1 row-start-1 w-full h-full">
               <img
                 :src="slide.src"
                 :alt="'Slide ' + slide.id"
@@ -49,6 +50,11 @@ const Carousel = () => {
         >
           &#10095;
         </button>
+      </div>
+      <div class="absolute rounded-lg bottom-3 md:bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-4 md:gap-3 bg-black/50 px-1.5 py-1 md:px-2" role="group" aria-label="slides" >
+        <template x-for="(slide, index) in slides">
+            <button class="size-2 rounded-full transition" x-on:click="activeSlide = index + 1" x-bind:class="[activeSlide === index + 1 ? 'bg-white' : 'bg-gray-400']" x-bind:aria-label="'slide ' + (index + 1)"></button>
+        </template>
       </div>
     </div>
   `;
@@ -143,13 +149,139 @@ const CompanyTable = () => {
 	);
 };
 
+const Modal = ({
+	message,
+	type,
+	onClose,
+}: {
+	message: string;
+	type: "success" | "error";
+	onClose: () => void;
+}) => (
+	<div className="fixed inset-0 bg-black/75 overflow-y-auto h-full w-full flex items-center justify-center z-50">
+		<div className="p-8 max-w-sm mx-4 shadow-lg rounded-md bg-gray-900">
+			<div className="text-center">
+				<div className="flex flex-col items-center">
+					{type === "success" ? (
+						<svg
+							className="w-12 h-12 text-[#00aca8]"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth="2"
+								d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+							></path>
+						</svg>
+					) : (
+						<svg
+							className="w-12 h-12 text-red-500"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth="2"
+								d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+							></path>
+						</svg>
+					)}
+					<h3 className="text-lg font-bold text-gray-200 mt-4">{message}</h3>
+				</div>
+				<div className="mt-4">
+					<button
+						onClick={onClose}
+						className="px-4 py-2 bg-[#00aca8] hover:bg-[#007c7a] text-white text-base font-medium rounded-full w-full shadow-sm focus:outline-none focus:ring-2 cursor-pointer"
+					>
+						Close
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+);
+
+const ModalPortal = ({ children }: { children: React.ReactNode }) => {
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+		return () => setMounted(false);
+	}, []);
+
+	if (!mounted) return null;
+
+	return ReactDOM.createPortal(children, document.body);
+};
+
 const RegistrationForm = () => {
+	const [formData, setFormData] = useState({
+		companyName: "",
+		industry: "Technology",
+		employeeSize: "",
+		email: "",
+		city: "",
+		agreeTC: false,
+	});
+	const [showModal, setShowModal] = useState(false);
+	const [modalMessage, setModalMessage] = useState("");
+	const [modalType, setModalType] = useState<"success" | "error">("error");
+
+	const handleChange = (
+		e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+	) => {
+		const { id, value, type } = e.target;
+		if (type === "checkbox") {
+			const checked = (e.target as HTMLInputElement).checked;
+			setFormData((prev) => ({ ...prev, [id]: checked }));
+		} else {
+			setFormData((prev) => ({ ...prev, [id]: value }));
+		}
+	};
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+		const { companyName, industry, employeeSize, email, city, agreeTC } =
+			formData;
+		if (!companyName || !industry || !employeeSize || !email || !city) {
+			setModalMessage("Please fill out all fields.");
+			setModalType("error");
+			setShowModal(true);
+			return;
+		}
+		if (!agreeTC) {
+			setModalMessage("Please agree to the Terms and Conditions.");
+			setModalType("error");
+			setShowModal(true);
+			return;
+		}
+		setModalMessage("Company successfully registered!");
+		setModalType("success");
+		setShowModal(true);
+	};
+
 	return (
 		<div className="w-full max-w-5xl mx-auto mt-8 bg-gray-900/50 rounded-lg shadow-lg p-8 backdrop-blur-sm">
+			{showModal && (
+				<ModalPortal>
+					<Modal
+						message={modalMessage}
+						type={modalType}
+						onClose={() => setShowModal(false)}
+					/>
+				</ModalPortal>
+			)}
 			<h2 className="text-3xl font-bold mb-6 text-gray-200">
 				Company Registration
 			</h2>
-			<form>
+			<form onSubmit={handleSubmit}>
 				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 					<div className="mb-4">
 						<label
@@ -163,6 +295,8 @@ const RegistrationForm = () => {
 							id="companyName"
 							type="text"
 							placeholder="Enter company name"
+							value={formData.companyName}
+							onChange={handleChange}
 						/>
 					</div>
 					<div className="mb-4">
@@ -176,6 +310,8 @@ const RegistrationForm = () => {
 							<select
 								className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-gray-700 appearance-none focus:outline-none focus:border-[#00aca8] text-gray-200"
 								id="industry"
+								value={formData.industry}
+								onChange={handleChange}
 							>
 								<option>Technology</option>
 								<option>Finance</option>
@@ -204,6 +340,8 @@ const RegistrationForm = () => {
 								className="form-radio h-5 w-5 text-[#00aca8]"
 								name="employeeSize"
 								value="1-50"
+								id="employeeSize"
+								onChange={handleChange}
 							/>
 							<span className="ml-2 text-gray-400">1-50</span>
 						</label>
@@ -213,6 +351,8 @@ const RegistrationForm = () => {
 								className="form-radio h-5 w-5 text-[#00aca8]"
 								name="employeeSize"
 								value="51-200"
+								id="employeeSize"
+								onChange={handleChange}
 							/>
 							<span className="ml-2 text-gray-400">51-200</span>
 						</label>
@@ -222,6 +362,8 @@ const RegistrationForm = () => {
 								className="form-radio h-5 w-5 text-[#00aca8]"
 								name="employeeSize"
 								value="200+"
+								id="employeeSize"
+								onChange={handleChange}
 							/>
 							<span className="ml-2 text-gray-400">200+</span>
 						</label>
@@ -240,6 +382,8 @@ const RegistrationForm = () => {
 							id="email"
 							type="email"
 							placeholder="Enter contact email"
+							value={formData.email}
+							onChange={handleChange}
 						/>
 					</div>
 					<div className="mb-4">
@@ -254,6 +398,8 @@ const RegistrationForm = () => {
 							id="city"
 							type="text"
 							placeholder="Enter headquarters city"
+							value={formData.city}
+							onChange={handleChange}
 						/>
 					</div>
 				</div>
@@ -262,6 +408,9 @@ const RegistrationForm = () => {
 						<input
 							type="checkbox"
 							className="form-checkbox h-5 w-5 text-[#00aca8] rounded-full"
+							id="agreeTC"
+							checked={formData.agreeTC}
+							onChange={handleChange}
 						/>
 						<span className="ml-2 text-gray-400">
 							Agree to Terms and Conditions
@@ -270,8 +419,8 @@ const RegistrationForm = () => {
 				</div>
 				<div className="flex items-center justify-center">
 					<button
-						className="w-full md:w-auto bg-[#00aca8] hover:bg-[#007c7a] text-white font-bold py-3 px-8 rounded-full focus:outline-none focus:shadow-outline transition-colors duration-300 hover:cursor-pointer"
-						type="button"
+						className="w-full md:w-auto bg-[#00aca8] hover:bg-[#007c7a] text-white font-bold py-3 px-8 rounded-full focus:outline-none focus:shadow-outline transition-colors duration-300 hover:cursor-pointer focus:ring-2"
+						type="submit"
 					>
 						Submit
 					</button>
