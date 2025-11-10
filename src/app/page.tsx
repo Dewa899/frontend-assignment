@@ -23,9 +23,9 @@ const Carousel = () => {
       class="relative w-full h-full bg-gray-900 rounded-lg overflow-hidden"
     >
       <div class="overflow-hidden h-full">
-        <div class="flex transition-transform duration-500 ease-in-out h-full">
-          <template x-for="slide in slides" :key="slide.id">
-            <div x-show="activeSlide === slide.id" class="w-full h-full flex-shrink-0">
+        <div class="grid h-full">
+          <template x-for="(slide, index) in slides" :key="slide.id">
+            <div x-show="activeSlide === slide.id" x-transition.opacity.duration.1000ms class="col-start-1 row-start-1 w-full h-full">
               <img
                 :src="slide.src"
                 :alt="'Slide ' + slide.id"
@@ -49,6 +49,11 @@ const Carousel = () => {
         >
           &#10095;
         </button>
+      </div>
+      <div class="absolute rounded-lg bottom-3 md:bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-4 md:gap-3 bg-black/50 px-1.5 py-1 md:px-2" role="group" aria-label="slides" >
+        <template x-for="(slide, index) in slides">
+            <button class="size-2 rounded-full transition" x-on:click="activeSlide = index + 1" x-bind:class="[activeSlide === index + 1 ? 'bg-white' : 'bg-gray-400']" x-bind:aria-label="'slide ' + (index + 1)"></button>
+        </template>
       </div>
     </div>
   `;
